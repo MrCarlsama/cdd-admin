@@ -1,14 +1,14 @@
 import qs from "qs";
 import { useCallback } from "react";
 
-const API_HOST = process.env.API_HOST;
+const API_HOST = process.env.REACT_APP_API_HOST;
 
 interface Config extends RequestInit {
   token?: string;
   data?: object;
 }
 
-const http = (
+const http = async (
   apiUrl: string,
   { data, token, headers, ...customConfig }: Config = {}
 ) => {
@@ -28,11 +28,10 @@ const http = (
     config.body = JSON.stringify(data || {});
   }
 
-  return window.fetch(`${API_HOST}/${apiUrl}`, config).then(async (res) => {
+  return window.fetch(`${API_HOST}/api${apiUrl}`, config).then(async (res) => {
     const data = await res.json();
-    console.log(data);
     if (data.isSuccess) {
-      return data;
+      return data.data;
     } else {
       return Promise.reject(data);
     }

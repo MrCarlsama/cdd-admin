@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from "react-router";
 import { BrowserRouter as Router, Link } from "react-router-dom";
 import { ArtistsScreen } from "screens/artists";
 import { PhotosScreen } from "screens/photos";
+import { WaitAuditPhotosScreen } from "screens/photos/waitAuditPhotos";
 
 const Sider = () => {
   return (
@@ -15,9 +16,11 @@ const Sider = () => {
         </Menu.Item>
         <Menu.SubMenu key="2" title={"图床"} icon={<VideoCameraOutlined />}>
           <Menu.Item key="2-1">
-            <Link to={"photos"}>所有</Link>
+            <Link to={"photos"}>DD区</Link>
           </Menu.Item>
-          <Menu.Item key="2-2">审核区</Menu.Item>
+          <Menu.Item key="2-2">
+            <Link to={"photos/audit"}>审核区</Link>
+          </Menu.Item>
         </Menu.SubMenu>
       </Menu>
     </Layout.Sider>
@@ -31,6 +34,10 @@ const Container = () => {
         <Routes>
           <Route path={"/artists"} element={<ArtistsScreen />}></Route>
           <Route path={"/photos"} element={<PhotosScreen />}></Route>
+          <Route
+            path={"/photos/audit"}
+            element={<WaitAuditPhotosScreen />}
+          ></Route>
           <Navigate to={window.location.pathname + "/artists"} />
         </Routes>
       </div>
