@@ -1,27 +1,58 @@
-import { Layout, Menu } from "antd";
-import { UserOutlined, VideoCameraOutlined } from "@ant-design/icons";
-import { Navigate, Route, Routes } from "react-router";
+import { BackTop, Button, Layout, Menu } from "antd";
+import {
+  UserOutlined,
+  TeamOutlined,
+  HeartOutlined,
+  UsergroupAddOutlined,
+} from "@ant-design/icons";
+import { Navigate, Route, Routes, useLocation } from "react-router";
 import { BrowserRouter as Router, Link } from "react-router-dom";
 import { ArtistsScreen } from "screens/artists";
 import { PhotosScreen } from "screens/photos";
 import { WaitAuditPhotosScreen } from "screens/photos/waitAuditPhotos";
+import { useEffect } from "react";
+import { useLoginModal } from "./util";
+import { LoginModal } from "./login";
+import { useAuth } from "context/authContext";
+
+const useRouteType = () => {
+  const units = useLocation().pathname.split("/");
+  return units[units.length - 1];
+};
 
 const Sider = () => {
+  const routeType = useRouteType();
+
+  const { open } = useLoginModal();
+
+  const { user } = useAuth();
+
   return (
-    <Layout.Sider collapsedWidth="0">
-      <div className="logo" />
-      <Menu theme="dark" mode="inline">
-        <Menu.Item key="1" icon={<UserOutlined />}>
+    <Layout.Sider breakpoint="lg" collapsedWidth="0">
+      <div style={{ padding: "24px" }}>
+        <Button
+          style={{ color: "rgb(0, 170, 166)" }}
+          type={"link"}
+          size={"large"}
+          onClick={open}
+          icon={<UserOutlined />}
+        >
+          {user ? user.username : "？"}
+        </Button>
+      </div>
+
+      <LoginModal />
+
+      <Menu theme="dark" mode="inline" selectedKeys={[routeType]}>
+        <Menu.Item key="photos" icon={<HeartOutlined />}>
+          <Link to={"photos"}>DD区</Link>
+        </Menu.Item>
+        <Menu.Item key="artists" icon={<TeamOutlined />}>
           <Link to={"artists"}>声优</Link>
         </Menu.Item>
-        <Menu.SubMenu key="2" title={"图床"} icon={<VideoCameraOutlined />}>
-          <Menu.Item key="2-1">
-            <Link to={"photos"}>DD区</Link>
-          </Menu.Item>
-          <Menu.Item key="2-2">
-            <Link to={"photos/audit"}>审核区</Link>
-          </Menu.Item>
-        </Menu.SubMenu>
+        <Menu.Item key="audit" icon={<UsergroupAddOutlined />}>
+          <Link to={"photos/audit"}>审核区</Link>
+        </Menu.Item>
       </Menu>
     </Layout.Sider>
   );
@@ -38,7 +69,9 @@ const Container = () => {
             path={"/photos/audit"}
             element={<WaitAuditPhotosScreen />}
           ></Route>
-          <Navigate to={window.location.pathname + "/artists"} />
+          <Navigate to={window.location.pathname + "/photos"} />
+
+          <BackTop />
         </Routes>
       </div>
     </Layout.Content>
@@ -63,6 +96,10 @@ const Main = () => {
 };
 
 export const IndexScreen = () => {
+  useEffect(() => {
+    document.title = "人之初 性本D 誰でも大好き";
+  }, []);
+
   return (
     <Layout>
       <Router>

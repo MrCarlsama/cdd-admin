@@ -9,9 +9,7 @@ import { useArtistModal, useArtistsSearchParams } from "./util";
 
 export const ArtistsScreen = () => {
   const [param, setParam] = useArtistsSearchParams();
-  const { data: artists, error, isLoading } = useArtists(
-    useDebounce(param, 200)
-  );
+  const { data: artists, isLoading } = useArtists(useDebounce(param, 200));
 
   const { open } = useArtistModal();
 
@@ -31,6 +29,7 @@ export const ArtistsScreen = () => {
             loading={isLoading}
             dataSource={artists || []}
             style={{ width: "100%" }}
+            pagination={{ position: ["bottomRight"] }}
           />
         </Col>
       </Row>

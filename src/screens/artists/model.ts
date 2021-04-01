@@ -1,4 +1,4 @@
-import { QueryKey, useMutation, useQuery } from "react-query";
+import { QueryKey, useMutation, useQuery, useQueryClient } from "react-query";
 import { Artists } from "types/artists";
 import { API_URL } from "utils/api";
 import { useHttp } from "utils/http";
@@ -49,10 +49,21 @@ export const useEditArtists = (queryKey: QueryKey) => {
 
 // 查
 export const useArtists = (param?: Partial<Artists>) => {
+  const queryClient = useQueryClient();
+
+  const artistsList: Artists[] =
+    queryClient.getQueryData(["artists", param]) || [];
+
+  const handle =
+    artistsList.length > 0
+      ? () => artistsList
+      : () => http(API_URL.Artist, { data: param });
+
   const http = useHttp();
 
   return useQuery<Artists[]>(["artists", param], () =>
-    http(API_URL.Artist, { data: param })
+    // http(API_URL.Artist, { data: param })
+    handle()
   );
 };
 

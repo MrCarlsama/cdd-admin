@@ -17,11 +17,10 @@ const toNumberArray = (values: any) =>
 export const ArtistSelect = (props: ArtistSelectProps) => {
   const { value: values, onChange, ...restProps } = props;
 
-  const { data: artists = [], error, isLoading } = useArtists();
+  const { data: artists = [] } = useArtists();
 
   return (
     <Select
-      style={{ width: "100%" }}
       mode="multiple"
       placeholder={"声优"}
       allowClear

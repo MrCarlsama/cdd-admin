@@ -1,9 +1,18 @@
-import { Button, Dropdown, Menu, Modal, Table, TableProps } from "antd";
+import {
+  Button,
+  Dropdown,
+  Menu,
+  message,
+  Modal,
+  Table,
+  TableProps,
+} from "antd";
 import { Artists } from "types/artists";
 import { useDeleteArtists } from "./model";
 import { useArtistModal, useArtistsQueryKey } from "./util";
 import { CloseCircleOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useAuth } from "context/authContext";
 
 export const ArtistsList = ({ ...props }: TableProps<Artists>) => {
   return (
@@ -56,11 +65,17 @@ const StatusIcon = (status: boolean) => {
 // 更多
 const More = ({ artist }: { artist: Artists }) => {
   const { startEdit } = useArtistModal();
-  const editArtist = (id: number) => () => startEdit(id);
+  const editArtist = (id: number) => startEdit(id);
+
+  const { user } = useAuth();
 
   const { mutate: deleteProject } = useDeleteArtists(useArtistsQueryKey());
 
   const confirmDeleteArtist = (id: number) => {
+    if (!user) {
+      message.error("没有权限哟~");
+      return;
+    }
     Modal.confirm({
       title: "确定删除这个项目吗？",
       content: "点击确定删除",
@@ -72,11 +87,19 @@ const More = ({ artist }: { artist: Artists }) => {
     });
   };
 
+  const editArtistHandle = (id: number) => {
+    if (!user) {
+      message.error("没有权限哟~");
+      return;
+    }
+    editArtist(id);
+  };
+
   return (
     <Dropdown
       overlay={
         <Menu>
-          <Menu.Item onClick={editArtist(artist.id)} key={"edit"}>
+          <Menu.Item onClick={() => editArtistHandle(artist.id)} key={"edit"}>
             编辑
           </Menu.Item>
           <Menu.Item

@@ -10,7 +10,7 @@ export const ArtistModal = () => {
   const useMutateArtist = editingArtist ? useEditArtists : useAddArtists;
 
   // 更新数据
-  const { mutateAsync, error, isLoading: mutateLoading } = useMutateArtist(
+  const { mutateAsync, isLoading: mutateLoading } = useMutateArtist(
     useArtistsQueryKey()
   );
 
