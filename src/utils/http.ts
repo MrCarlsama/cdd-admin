@@ -29,7 +29,7 @@ const http = async (
     config.body = JSON.stringify(data || {});
   }
 
-  return window.fetch(`${API_HOST}/api${apiUrl}`, config).then(async (res) => {
+  return window.fetch(`${API_HOST}${apiUrl}`, config).then(async (res) => {
     const data = await res.json();
     if (data.isSuccess) {
       return data.data;

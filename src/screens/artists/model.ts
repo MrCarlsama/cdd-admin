@@ -2,6 +2,7 @@ import { QueryKey, useMutation, useQuery, useQueryClient } from "react-query";
 import { Artists } from "types/artists";
 import { API_URL } from "utils/api";
 import { useHttp } from "utils/http";
+import { useAsync } from "utils/useAsync";
 import {
   useQueryAddConfig,
   useQueryDeleteConfig,
@@ -78,4 +79,24 @@ export const useArtist = (id: number) => {
       enabled: !!id,
     }
   );
+};
+
+type InitializeArtistsResult = {
+  msg: string;
+  successArtist: string[];
+  failArtist: string[];
+  repeationArtist: string[];
+};
+
+// 自动生成
+export const useInitializeArtists = () => {
+  const http = useHttp();
+
+  const { run, ...result } = useAsync<InitializeArtistsResult>();
+
+  const handle = () => {
+    run(http(`${API_URL.Artist}/init`, { method: "POST" }));
+  };
+
+  return { handle, ...result };
 };

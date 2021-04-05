@@ -1,11 +1,26 @@
-import { Button, Card, Col, Image, message, Row, Spin, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Image,
+  message,
+  Row,
+  Space,
+  Spin,
+  Typography,
+} from "antd";
 import {
   CloseCircleOutlined,
   CheckCircleOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
 import { ArtistSelect } from "components/artistSelect";
-import { useAuditPhotos, usePhotos } from "./model";
+import {
+  useAuditPhotos,
+  useAuditPhotosGlobal,
+  usePhotos,
+  usePhotosGlobalReMatch,
+} from "./model";
 import { Photos } from "types/photos";
 import styled from "@emotion/styled";
 import {
@@ -142,13 +157,55 @@ export const WaitAuditPhotosScreen = () => {
     mutateAsync(auditList);
   };
 
+  // 重新匹配
+  const {
+    handle: handlePhotosReMatch,
+    isLoading: reMatchLoading,
+    data: rematchResult,
+  } = usePhotosGlobalReMatch();
+
+  useEffect(() => {
+    if (rematchResult?.msg) {
+      message.success(String(rematchResult.msg));
+    }
+  }, [rematchResult]);
+
+  // 全局审核
+  const {
+    handle: handlePhotosGlobalAudit,
+    isLoading: auditPhotosGlobalLoading,
+    data: auditPhotosGlobalResult,
+  } = useAuditPhotosGlobal();
+
+  useEffect(() => {
+    if (auditPhotosGlobalResult?.msg) {
+      message.success(String(auditPhotosGlobalResult.msg));
+    }
+  }, [auditPhotosGlobalResult]);
+
   return (
     <>
       <Row gutter={[8, 8]}>
         <Col span={24}>
-          <Button type={"primary"} onClick={handleAudit}>
-            一键审核
-          </Button>
+          <Space>
+            <Button type={"primary"} onClick={handleAudit}>
+              一键审核
+            </Button>
+            <Button
+              type={"primary"}
+              loading={auditPhotosGlobalLoading}
+              onClick={() => handlePhotosGlobalAudit()}
+            >
+              全局审核（单个）
+            </Button>
+            <Button
+              type={"primary"}
+              loading={reMatchLoading}
+              onClick={() => handlePhotosReMatch()}
+            >
+              全局重新匹配
+            </Button>
+          </Space>
         </Col>
         <Col span={24}>
           {editingLoading ? (

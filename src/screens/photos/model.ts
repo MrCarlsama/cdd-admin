@@ -7,6 +7,7 @@ import { Photos } from "types/photos";
 import { API_URL } from "utils/api";
 import { QueryKey, useMutation, useQuery } from "react-query";
 import { Pageination } from "types";
+import { useAsync } from "utils/useAsync";
 
 // 查
 export const usePhotos = (param?: Pageination<Partial<Photos>>) => {
@@ -26,9 +27,22 @@ export const useAuditPhotos = (queryKey: QueryKey) => {
       http(`${API_URL.Photos}/audit`, {
         data: auditList,
         method: "POST",
-      }),
-    useQueryEditConfig(queryKey)
+      })
+    // useQueryEditConfig(queryKey)
   );
+};
+
+// 重新匹配
+export const useAuditPhotosGlobal = () => {
+  const http = useHttp();
+
+  const { run, ...result } = useAsync<{ msg: string }>();
+
+  const handle = () => {
+    run(http(`${API_URL.Photos}/auditGlobal`, { method: "POST" }));
+  };
+
+  return { handle, ...result };
 };
 
 // 删
@@ -53,8 +67,17 @@ export const useExportPhotos = () => {
       method: "POST",
     })
   );
-  // return http(`${API_URL.Photos}/export`, {
-  //   data: param,
-  //   method: "POST",
-  // });
+};
+
+// 重新匹配
+export const usePhotosGlobalReMatch = () => {
+  const http = useHttp();
+
+  const { run, ...result } = useAsync<{ msg: string }>();
+
+  const handle = () => {
+    run(http(`${API_URL.Photos}/reMatch`, { method: "POST" }));
+  };
+
+  return { handle, ...result };
 };

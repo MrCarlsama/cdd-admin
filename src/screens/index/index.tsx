@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useLoginModal } from "./util";
 import { LoginModal } from "./login";
 import { useAuth } from "context/authContext";
+import { ComparisonScreen } from "screens/comparison";
 
 const useRouteType = () => {
   const units = useLocation().pathname.split("/");
@@ -53,6 +54,9 @@ const Sider = () => {
         <Menu.Item key="audit" icon={<UsergroupAddOutlined />}>
           <Link to={"photos/audit"}>审核区</Link>
         </Menu.Item>
+        <Menu.Item key="comparison" icon={<UsergroupAddOutlined />}>
+          <Link to={"artists/comparison"}>对照表</Link>
+        </Menu.Item>
       </Menu>
     </Layout.Sider>
   );
@@ -68,6 +72,10 @@ const Container = () => {
           <Route
             path={"/photos/audit"}
             element={<WaitAuditPhotosScreen />}
+          ></Route>
+          <Route
+            path={"/artists/comparison"}
+            element={<ComparisonScreen />}
           ></Route>
           <Navigate to={window.location.pathname + "/photos"} />
 
