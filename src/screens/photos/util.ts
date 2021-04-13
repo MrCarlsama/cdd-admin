@@ -49,7 +49,10 @@ export const useCardImageSelect = (photos: Photos[]) => {
   return [selectArtistsIds, handleSetSelectArtistsIds] as const;
 };
 
-export const useDeletePhotosHandle = (param: PhotoParamType) => {
+export const useDeletePhotosHandle = (
+  param: PhotoParamType,
+  callback: (id: number) => void
+) => {
   const { user } = useAuth();
 
   const { mutateAsync: deleteHandle } = useDeletePhotos(
@@ -65,8 +68,9 @@ export const useDeletePhotosHandle = (param: PhotoParamType) => {
       okText: "确定",
       cancelText: "取消",
       title: "确定删除图片吗？",
-      onOk() {
-        return deleteHandle({ id });
+      async onOk() {
+        await deleteHandle({ id });
+        callback(id);
       },
     });
   };

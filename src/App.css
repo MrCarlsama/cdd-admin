@@ -3,7 +3,12 @@ html {
   /* 1rem = 10px */
   font-size: 62.5%;
 }
-
+html::-webkit-scrollbar {
+  width: 0 !important;
+}
+.ant-scrolling-effect {
+  width: 100% !important;
+}
 html body #root .App {
   min-height: 100vh;
 }

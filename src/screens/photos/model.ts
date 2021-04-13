@@ -1,7 +1,4 @@
-import {
-  useQueryDeleteConfig,
-  useQueryEditConfig,
-} from "utils/useOpimisticOptions";
+import { useQueryDeleteConfig } from "utils/useOpimisticOptions";
 import { useHttp } from "utils/http";
 import { Photos } from "types/photos";
 import { API_URL } from "utils/api";
@@ -19,16 +16,14 @@ export const usePhotos = (param?: Pageination<Partial<Photos>>) => {
 };
 
 // 批量审核
-export const useAuditPhotos = (queryKey: QueryKey) => {
+export const useAuditPhotos = () => {
   const http = useHttp();
 
-  return useMutation(
-    (auditList: { id: number; artistIds: number[] }[]) =>
-      http(`${API_URL.Photos}/audit`, {
-        data: auditList,
-        method: "POST",
-      })
-    // useQueryEditConfig(queryKey)
+  return useMutation((auditList: { id: number; artistIds: number[] }[]) =>
+    http(`${API_URL.Photos}/audit`, {
+      data: auditList,
+      method: "POST",
+    })
   );
 };
 

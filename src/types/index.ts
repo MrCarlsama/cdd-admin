@@ -1,5 +1,5 @@
 export interface Pageination<T> {
   limit: number;
-  skip: number;
+  page: number;
   options?: T;
 }

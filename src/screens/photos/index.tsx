@@ -15,17 +15,29 @@ import { Photos } from "types/photos";
 import styled from "@emotion/styled";
 import { ArtistSelect } from "components/artistSelect";
 import { usePhotosParams, PhotoParamType } from "./util";
-import { DownloadOutlined, ReloadOutlined } from "@ant-design/icons";
-import { useEffect } from "react";
+import {
+  DownloadOutlined,
+  ReloadOutlined,
+  DeleteOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
+import { useEffect, useState } from "react";
+import { useScroll } from "utils/useScroll";
 const GridContainer = ({
+  handleLoadMore,
   photos,
   isLoading,
 }: {
+  handleLoadMore: () => void;
   photos: Photos[];
   isLoading?: boolean;
 }) => {
+  const ref = useScroll(() => {
+    handleLoadMore();
+  });
+
   return (
-    <Row gutter={[8, 8]}>
+    <Row gutter={[8, 8]} ref={ref}>
       {isLoading ? (
         <Spin size={"large"} />
       ) : (
@@ -42,6 +54,8 @@ const GridContainer = ({
 const CardContainer = ({ photo }: { photo: Photos }) => {
   const OSS_HOST = process.env.REACT_APP_OSS_URL;
 
+  const actions = [<DeleteOutlined />, <StopOutlined />];
+
   return (
     <Card
       hoverable={true}
@@ -50,6 +64,7 @@ const CardContainer = ({ photo }: { photo: Photos }) => {
           <Image src={`${OSS_HOST}${photo.url}`} />
         </ImageWrap>
       }
+      actions={actions}
     >
       <Space wrap={true}>
         {photo.artists.map((artist) => (
@@ -88,7 +103,6 @@ const SearchContainer = ({ param, setParam }: SearchPanelProps) => {
         key: "export",
       });
     } else if (!isLoading && status === "success") {
-      // message.success({ content: "Loaded!", key: "export"});
       notification.success({
         message: "您的DD大礼包已到！",
         duration: null,
@@ -129,6 +143,7 @@ const SearchContainer = ({ param, setParam }: SearchPanelProps) => {
           onChange={(values) =>
             setParam({
               ...param,
+              page: 0,
               options: { isAudit: true, artistIds: values },
             })
           }
@@ -141,22 +156,35 @@ const SearchContainer = ({ param, setParam }: SearchPanelProps) => {
 export const PhotosScreen = () => {
   const [param, setParam] = usePhotosParams({
     limit: 12,
-    skip: 0,
+    page: 0,
     options: {
       isAudit: true,
       artistIds: [],
     },
   });
 
-  const { data: photos = [], isLoading, status } = usePhotos(param);
+  const { data = [], isLoading } = usePhotos(param);
+
+  const [photos, setPhotos] = useState<Photos[]>([]);
 
   useEffect(() => {
-    if (status === "success" && param.limit > 12) {
-      window.location.href =
-        window.location +
-        (window.location.toString().includes("#Btn") ? "" : "#Btn");
+    if (param.page === 0) {
+      setPhotos([]);
     }
-  }, [status, param]);
+  }, [param]);
+
+  useEffect(() => {
+    setPhotos((photos) => [...photos, ...data]);
+  }, [data]);
+
+  const handleLoadMore = () => {
+    if (!isLoading) {
+      setParam((pre) => ({
+        ...param,
+        page: Number(pre.page) + 1,
+      }));
+    }
+  };
 
   return (
     <>
@@ -165,19 +193,14 @@ export const PhotosScreen = () => {
           <SearchContainer param={param} setParam={setParam} />
         </Col>
         <Col span={24}>
-          <GridContainer photos={photos} />
+          <GridContainer photos={photos} handleLoadMore={handleLoadMore} />
         </Col>
         <Col span={24}>
           <Button
             id={"Btn"}
             type="link"
             loading={isLoading}
-            onClick={() => {
-              setParam((pre) => ({
-                ...param,
-                limit: Number(pre.limit) + 12,
-              }));
-            }}
+            onClick={handleLoadMore}
             block
             icon={<ReloadOutlined />}
           >

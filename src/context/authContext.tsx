@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { UseMutationResult, useQueryClient } from "react-query";
 import { Users } from "types/users";
 import { useMutation } from "react-query";
@@ -16,6 +16,11 @@ type AuthForm = { username: string; password: string };
 
 const logoutHandle = async () =>
   window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+
+const getUser = (): Users => {
+  const localUsers = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+  return localUsers ? JSON.parse(localUsers) : null;
+};
 
 const AuthContext = React.createContext<
   | {
@@ -63,6 +68,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .then(setUser)
     );
   };
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
 
   return (
     <AuthContext.Provider

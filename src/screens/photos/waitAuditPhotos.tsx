@@ -27,15 +27,22 @@ import {
   useCardImageSelect,
   useDeletePhotosHandle,
   usePhotosParams,
-  usePhotosQueryKey,
 } from "./util";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "context/authContext";
+import { useScroll } from "utils/useScroll";
 
 type BatchSelectProps = {
   selectArtistsIds: number[][];
   handleSetSelectArtistsIds: (ids: number[], index: number) => void;
   deletePhotosHandle: (id: number) => void;
+  handleAuditSingle: ({
+    id,
+    artistIds,
+  }: {
+    id: number;
+    artistIds: number[];
+  }) => void;
 };
 
 const CardContainer = ({
@@ -44,8 +51,25 @@ const CardContainer = ({
   selectArtistsIds,
   handleSetSelectArtistsIds,
   deletePhotosHandle,
+  handleAuditSingle,
 }: { photo: Photos; photoIdx: number } & BatchSelectProps) => {
   const OSS_HOST = process.env.REACT_APP_OSS_URL;
+
+  const isDisabled = photo.isAudit || !photo.status;
+
+  const actions = isDisabled
+    ? []
+    : [
+        <CloseCircleOutlined onClick={() => deletePhotosHandle(photo.id)} />,
+        <CheckCircleOutlined
+          onClick={() =>
+            handleAuditSingle({
+              id: photo.id,
+              artistIds: selectArtistsIds[photoIdx],
+            })
+          }
+        />,
+      ];
 
   return (
     <Card
@@ -55,15 +79,13 @@ const CardContainer = ({
           <Image src={`${OSS_HOST}${photo.url}`} />
         </ImageWrap>
       }
-      actions={[
-        <CloseCircleOutlined onClick={() => deletePhotosHandle(photo.id)} />,
-        <CheckCircleOutlined />,
-      ]}
+      actions={actions}
     >
       <Typography.Text>{photo.description}</Typography.Text>
       <ArtistSelect
         style={{ width: "100%" }}
         value={selectArtistsIds[photoIdx]}
+        disabled={isDisabled}
         onChange={(val) => handleSetSelectArtistsIds(val, photoIdx)}
       />
     </Card>
@@ -72,12 +94,19 @@ const CardContainer = ({
 
 const GridContainer = ({
   photos,
+  handleLoadMore,
   selectArtistsIds,
   handleSetSelectArtistsIds,
   deletePhotosHandle,
-}: { photos: Photos[] } & BatchSelectProps) => {
+  handleAuditSingle,
+}: { photos: Photos[]; handleLoadMore: () => void } & BatchSelectProps) => {
+  // 滚动加载
+  const ref = useScroll(() => {
+    handleLoadMore();
+  });
+
   return (
-    <Row gutter={[8, 8]}>
+    <Row gutter={[8, 8]} ref={ref}>
       {photos.map((photo, photoIdx) => (
         <Col xs={24} sm={12} md={6} lg={4} key={photo.id}>
           <CardContainer
@@ -86,6 +115,7 @@ const GridContainer = ({
             selectArtistsIds={selectArtistsIds}
             handleSetSelectArtistsIds={handleSetSelectArtistsIds}
             deletePhotosHandle={deletePhotosHandle}
+            handleAuditSingle={handleAuditSingle}
           />
         </Col>
       ))}
@@ -104,24 +134,32 @@ const ImageWrap = styled.div`
 export const WaitAuditPhotosScreen = () => {
   const [param, setParam] = usePhotosParams({
     limit: 12,
-    skip: 0,
+    page: 0,
     options: {
       isAudit: false,
     },
   });
 
-  const { data: photos = [], status, isLoading: gettingLoading } = usePhotos(
-    param
-  );
+  const { data = [], isLoading: gettingLoading, refetch } = usePhotos(param);
 
-  // 最底部
+  const [photos, setPhotos] = useState<Photos[]>([]);
+
   useEffect(() => {
-    if (status === "success" && param.limit > 12) {
-      window.location.href =
-        window.location +
-        (window.location.toString().includes("#Btn") ? "" : "#Btn");
+    if (param.page === 0) {
+      setPhotos([]);
     }
-  }, [status, param]);
+  }, [param]);
+
+  useEffect(() => {
+    setPhotos((photos) => [...photos, ...data]);
+  }, [data]);
+
+  const handleLoadMore = () => {
+    setParam((pre) => ({
+      ...param,
+      page: Number(pre.page) + 1,
+    }));
+  };
 
   // 下拉框
   const [selectArtistsIds, handleSetSelectArtistsIds] = useCardImageSelect(
@@ -129,15 +167,21 @@ export const WaitAuditPhotosScreen = () => {
   );
 
   // 删除
-  const deletePhotosHandle = useDeletePhotosHandle(param);
+  const deletePhotosHandle = useDeletePhotosHandle(param, (id) => {
+    const oldPhotos = [...photos];
+
+    const idx = oldPhotos.findIndex((photo) => photo.id === id);
+
+    idx && (oldPhotos[idx].status = false);
+
+    setPhotos(oldPhotos);
+  });
   // 登录信息
   const { user } = useAuth();
 
-  // 审核
-  const { mutateAsync, isLoading: editingLoading } = useAuditPhotos(
-    usePhotosQueryKey(param)
-  );
-  const handleAudit = async () => {
+  // 批量审核
+  const { mutateAsync, isLoading: editingLoading } = useAuditPhotos();
+  const handleAudit = () => {
     if (!user) {
       message.error("没有权限哟~");
       return;
@@ -155,6 +199,28 @@ export const WaitAuditPhotosScreen = () => {
     }
 
     mutateAsync(auditList);
+  };
+  // 单个审核
+  const handleAuditSingle = async ({
+    id,
+    artistIds,
+  }: {
+    id: number;
+    artistIds: number[];
+  }) => {
+    if (artistIds.length === 0) {
+      message.warning("至少选一个声优啊！");
+      return;
+    }
+    await mutateAsync([{ id, artistIds }]);
+
+    const oldPhotos = [...photos];
+
+    const idx = oldPhotos.findIndex((photo) => photo.id === id);
+
+    idx && (oldPhotos[idx].isAudit = true);
+
+    setPhotos(oldPhotos);
   };
 
   // 重新匹配
@@ -216,6 +282,8 @@ export const WaitAuditPhotosScreen = () => {
               selectArtistsIds={selectArtistsIds}
               handleSetSelectArtistsIds={handleSetSelectArtistsIds}
               deletePhotosHandle={deletePhotosHandle}
+              handleLoadMore={handleLoadMore}
+              handleAuditSingle={handleAuditSingle}
             />
           )}
         </Col>
@@ -224,9 +292,7 @@ export const WaitAuditPhotosScreen = () => {
             id={"Btn"}
             type="link"
             loading={gettingLoading}
-            onClick={() => {
-              setParam((pre) => ({ ...param, limit: Number(pre.limit) + 12 }));
-            }}
+            onClick={handleLoadMore}
             block
             icon={<ReloadOutlined />}
           >
