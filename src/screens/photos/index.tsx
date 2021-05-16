@@ -8,6 +8,7 @@ import {
   Row,
   Space,
   Spin,
+  Statistic,
   Tag,
 } from "antd";
 import { useExportPhotos, usePhotos } from "./model";
@@ -20,9 +21,12 @@ import {
   ReloadOutlined,
   DeleteOutlined,
   StopOutlined,
+  SearchOutlined,
+  PictureFilled,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { useScroll } from "utils/useScroll";
+import { PageinationList, PageinationResult } from "types";
 const GridContainer = ({
   handleLoadMore,
   photos,
@@ -61,14 +65,27 @@ const CardContainer = ({ photo }: { photo: Photos }) => {
       hoverable={true}
       cover={
         <ImageWrap>
-          <Image src={`${OSS_HOST}${photo.url}`} />
+          <Image
+            src={`${OSS_HOST}${photo.url}?x-oss-process=image/auto-orient,1/interlace,1/quality,q_40`}
+            preview={{
+              src: `${OSS_HOST}${photo.url}`,
+            }}
+          />
         </ImageWrap>
       }
       actions={actions}
     >
       <Space wrap={true}>
         {photo.artists.map((artist) => (
-          <Tag key={artist.id}>{artist.name}</Tag>
+          <Tag key={artist.id}>
+            <Button
+              type={"link"}
+              target={"_blank"}
+              href={`https://zh.moegirl.org.cn/${artist.name}`}
+            >
+              {artist.name}
+            </Button>
+          </Tag>
         ))}
       </Space>
     </Card>
@@ -86,9 +103,16 @@ const ImageWrap = styled.div`
 interface SearchPanelProps {
   param: PhotoParamType;
   setParam: (param: SearchPanelProps["param"]) => void;
+  total: number;
+  currentTotal: number;
 }
 
-const SearchContainer = ({ param, setParam }: SearchPanelProps) => {
+const SearchContainer = ({
+  param,
+  setParam,
+  total,
+  currentTotal,
+}: SearchPanelProps) => {
   const {
     data: { url } = { url: "" },
     mutateAsync: exportHandle,
@@ -149,6 +173,32 @@ const SearchContainer = ({ param, setParam }: SearchPanelProps) => {
           }
         />
       </Col>
+      <Col
+        lg={2}
+        xs={24}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Space>
+          <Statistic
+            value={currentTotal}
+            prefix={<SearchOutlined />}
+            valueStyle={{
+              fontSize: "14px",
+            }}
+          />
+          <Statistic
+            value={total}
+            prefix={<PictureFilled />}
+            valueStyle={{
+              fontSize: "14px",
+            }}
+          />
+        </Space>
+      </Col>
     </Row>
   );
 };
@@ -163,7 +213,15 @@ export const PhotosScreen = () => {
     },
   });
 
-  const { data = [], isLoading } = usePhotos(param);
+  const { data = new PageinationList<Photos[]>([]), isLoading } = usePhotos(
+    param
+  );
+
+  const {
+    data: loadPhotos = [],
+    currentTotal,
+    total,
+  } = data as PageinationResult<Photos[]>;
 
   const [photos, setPhotos] = useState<Photos[]>([]);
 
@@ -174,8 +232,8 @@ export const PhotosScreen = () => {
   }, [param]);
 
   useEffect(() => {
-    setPhotos((photos) => [...photos, ...data]);
-  }, [data]);
+    setPhotos((photos) => [...photos, ...loadPhotos]);
+  }, [loadPhotos]);
 
   const handleLoadMore = () => {
     if (!isLoading) {
@@ -190,8 +248,14 @@ export const PhotosScreen = () => {
     <>
       <Row gutter={[8, 8]}>
         <Col span={24}>
-          <SearchContainer param={param} setParam={setParam} />
+          <SearchContainer
+            param={param}
+            setParam={setParam}
+            total={total}
+            currentTotal={currentTotal}
+          />
         </Col>
+
         <Col span={24}>
           <GridContainer photos={photos} handleLoadMore={handleLoadMore} />
         </Col>

@@ -99,7 +99,7 @@ export const useAsync = <D>(
     setData,
     setError,
     // retry 被调用时重新跑一遍run
-    retry,
+    refetch: retry,
     ...state,
   };
 };

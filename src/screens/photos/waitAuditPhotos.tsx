@@ -31,6 +31,7 @@ import {
 import { useEffect, useState } from "react";
 import { useAuth } from "context/authContext";
 import { useScroll } from "utils/useScroll";
+import { PageinationList, PageinationResult } from "types";
 
 type BatchSelectProps = {
   selectArtistsIds: number[][];
@@ -76,7 +77,12 @@ const CardContainer = ({
       hoverable={true}
       cover={
         <ImageWrap>
-          <Image src={`${OSS_HOST}${photo.url}`} />
+          <Image
+            src={`${OSS_HOST}${photo.url}?x-oss-process=image/auto-orient,1/interlace,1/quality,q_40`}
+            preview={{
+              src: `${OSS_HOST}${photo.url}`,
+            }}
+          />
         </ImageWrap>
       }
       actions={actions}
@@ -140,7 +146,12 @@ export const WaitAuditPhotosScreen = () => {
     },
   });
 
-  const { data = [], isLoading: gettingLoading, refetch } = usePhotos(param);
+  const {
+    data = new PageinationList<Photos[]>([]),
+    isLoading: gettingLoading,
+  } = usePhotos(param);
+
+  const { data: loadPhotos = [] } = data as PageinationResult<Photos[]>;
 
   const [photos, setPhotos] = useState<Photos[]>([]);
 
@@ -151,8 +162,8 @@ export const WaitAuditPhotosScreen = () => {
   }, [param]);
 
   useEffect(() => {
-    setPhotos((photos) => [...photos, ...data]);
-  }, [data]);
+    setPhotos((photos) => [...photos, ...loadPhotos]);
+  }, [loadPhotos]);
 
   const handleLoadMore = () => {
     setParam((pre) => ({

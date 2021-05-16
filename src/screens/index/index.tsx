@@ -4,17 +4,19 @@ import {
   TeamOutlined,
   HeartOutlined,
   UsergroupAddOutlined,
+  RedoOutlined,
 } from "@ant-design/icons";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { BrowserRouter as Router, Link } from "react-router-dom";
 import { ArtistsScreen } from "screens/artists";
 import { PhotosScreen } from "screens/photos";
 import { WaitAuditPhotosScreen } from "screens/photos/waitAuditPhotos";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLoginModal } from "./util";
 import { LoginModal } from "./login";
 import { useAuth } from "context/authContext";
 import { ComparisonScreen } from "screens/comparison";
+import { RandomScreens } from "screens/random";
 
 const useRouteType = () => {
   const units = useLocation().pathname.split("/");
@@ -58,6 +60,9 @@ const Sider = ({ ...props }) => {
         <Menu.Item key="photos" icon={<HeartOutlined />}>
           <Link to={"photos"}>DD区</Link>
         </Menu.Item>
+        <Menu.Item key="random" icon={<RedoOutlined />}>
+          <Link to={"random"}>随机图片</Link>
+        </Menu.Item>
         <Menu.Item key="artists" icon={<TeamOutlined />}>
           <Link to={"artists"}>声优</Link>
         </Menu.Item>
@@ -84,6 +89,7 @@ const Container = ({ ...props }) => {
       <div style={{ padding: 24, backgroundColor: "white", flex: 1 }}>
         <Routes>
           <Route path={"/artists"} element={<ArtistsScreen />}></Route>
+          <Route path={"/random"} element={<RandomScreens />}></Route>
           <Route path={"/photos"} element={<PhotosScreen />}></Route>
           <Route
             path={"/photos/audit"}

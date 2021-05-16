@@ -3,14 +3,13 @@ import { useHttp } from "utils/http";
 import { Photos } from "types/photos";
 import { API_URL } from "utils/api";
 import { QueryKey, useMutation, useQuery } from "react-query";
-import { Pageination } from "types";
+import { Pageination, PageinationResult } from "types";
 import { useAsync } from "utils/useAsync";
 
 // 查
 export const usePhotos = (param?: Pageination<Partial<Photos>>) => {
   const http = useHttp();
-
-  return useQuery<Photos[]>(["photos", param], () =>
+  return useQuery<PageinationResult<Photos[]>>(["photos", param], () =>
     http(API_URL.Photos, { data: param })
   );
 };
